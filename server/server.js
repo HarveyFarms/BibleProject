@@ -89,7 +89,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 //////////////////////////////////////////////////
 const db = new Database(config);
 
-await db.test_connection();
+(async () => {
+  await db.test_connection();
+})();
 
 //////////////////////////////////////////////////
 // Back-end API                                 //

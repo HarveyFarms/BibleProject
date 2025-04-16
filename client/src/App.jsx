@@ -10,8 +10,8 @@ function App() {
     <>
       <Routes>
         {/* Redirect logic AFTER loading */}
-        <Route path="/" element={<WelcomePage />} />
-        <Route path="/example-data" element={<ExampleData />} />
+        <Route path="/" element={<WelcomePage/>} />
+        <Route path="/example-data" element={<ExampleData/>} />
       </Routes>
     </>
   )

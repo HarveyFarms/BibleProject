@@ -1,0 +1,136 @@
+<!-- bible_view.html -->
+
+<!-- Book Search Form -->
+<form method="get" action="{% url 'bible_view' %}" id="book-search-form" class="mb-4 flex items-center gap-2" onsubmit="return validateForm()">
+  <label for="book-input" class="font-semibold">Book:</label>
+  <input list="book-list" id="book-input" name="book_name" placeholder="Start typing a book..." class="border rounded p-1" autocomplete="off">
+  <datalist id="book-list">
+    {% for num, name in book_names.items %}
+      <option value="{{ name }}">
+    {% endfor %}
+  </datalist>
+
+  <label for="chapter-input" class="font-semibold">Chapter:</label>
+  <input type="number" id="chapter-input" name="chapter" min="1" class="border rounded p-1 w-20" placeholder="1" required>
+
+  <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Go</button>
+</form>
+
+<script>
+  function validateForm() {
+    const chapterInput = document.getElementById("chapter-input").value;
+    if (!chapterInput) {
+      alert("Please enter a chapter number.");
+      return false; // prevent form submission
+    }
+    return true; // allow form submission
+  }
+</script>
+
+<!-- Display Verses -->
+<h1>{{ book_name }}, Chapter {{ chapter }}</h1>
+{% for verse in verses %}
+<div class="verse" data-verse-id="{{ verse.id }}" style="margin-bottom: 10px;">
+  <strong>{{ verse.verse }}</strong>: 
+  <span class="verse-text" id="verse-text-{{ verse.id }}">
+    {{ verse.text }}
+  </span>
+
+  <!-- Highlight button -->
+  <button onclick="highlightVerse({{ verse.id }}, 'yellow')">⭐</button>
+
+  <!-- Comment section -->
+  <div id="comment-container-{{ verse.id }}">
+    <form id="comment-form-{{ verse.id }}" method="post" action="{% url 'post_comment' %}">
+      {% csrf_token %}
+      <textarea placeholder="Write a comment..." id="comment-{{ verse.id }}"></textarea>
+      <button type="submit">Post Comment</button>
+    </form>
+
+    <div id="comments-{{ verse.id }}">
+      {% for comment in verse.comments.all %}
+        <p><strong>{{ comment.user.username }}:</strong> {{ comment.text }}</p>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<script>
+  // Highlight Verse Function
+  function highlightVerse(verseId, color) {
+    fetch("{% url 'add_highlight' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+        "X-CSRFToken": "{{ csrf_token }}"
+      },
+      body: `verse_id=${verseId}&color=${color}`
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.status === "ok") {
+        const verseElem = document.getElementById(`verse-text-${verseId}`);
+        verseElem.style.backgroundColor = color;  // Apply color to verse text
+      } else {
+        alert(data.message);  // Display error message if any
+      }
+    });
+  }
+
+  // Submit Comment Function
+  document.querySelectorAll('form[id^="comment-form-"]').forEach(form => {
+    form.addEventListener("submit", function(e) {
+      e.preventDefault();  // Prevent default form submission
+
+      const verseId = form.id.split("-")[2];
+      const text = document.getElementById(`comment-${verseId}`).value;
+
+      fetch("{% url 'post_comment' %}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: `verse_id=${verseId}&text=${encodeURIComponent(text)}`
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.status === "ok") {
+          const commentBox = document.getElementById(`comments-${verseId}`);
+          const newComment = document.createElement("p");
+          newComment.innerHTML = `<strong>${data.username}:</strong> ${data.text}`;
+          commentBox.appendChild(newComment);  // Append new comment
+          document.getElementById(`comment-${verseId}`).value = "";  // Clear the textarea
+        }
+      });
+    });
+  });
+</script>
+
+<script>
+  // Render Highlights and Comments on Page Load
+  document.addEventListener("DOMContentLoaded", () => {
+    fetch("{% url 'fetch_group_data' %}")
+      .then(response => response.json())
+      .then(data => {
+        // Render highlights
+        data.highlights.forEach(h => {
+          const verseElem = document.getElementById(`verse-text-${h.verse_id}`);
+          if (verseElem) {
+            verseElem.style.backgroundColor = h.color;
+          }
+        });
+
+        // Render comments
+        data.comments.forEach(c => {
+          const commentBox = document.getElementById(`comments-${c.verse_id}`);
+          if (commentBox) {
+            const commentElem = document.createElement("p");
+            commentElem.innerHTML = `<strong>${c.user}:</strong> ${c.text}`;
+            commentBox.appendChild(commentElem);
+          }
+        });
+      });
+  });
+</script>

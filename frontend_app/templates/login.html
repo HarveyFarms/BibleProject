@@ -1,0 +1,20 @@
+<!DOCTYPE login.html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Project</title>
+</head>
+<body>
+  <p>
+  Return to <a href="{% url 'index' %}">main page</a>
+  </p>
+    <h1>Login Page</h1>
+    <h2>Sign Up</h2>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Submit</button>
+    </form>
+</body>
+</html>

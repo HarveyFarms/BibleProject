@@ -1,0 +1,8 @@
+<!-- join_group.html -->
+<ul>
+    {% for group in groups %}
+        <li>
+            <a href="{% url 'join-group' group.id %}">{{ group.name }}</a>
+        </li>
+    {% endfor %}
+</ul>

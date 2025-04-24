@@ -1,0 +1,29 @@
+<!DOCTYPE index.html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bible Project</title>
+  </head>
+  <body>
+    {% if user.is_authenticated %}
+    <form method="post" action="{% url 'logout' %}">
+      {% csrf_token %}
+      <button type="submit">Log out</button>
+    </form>
+    <h1>Hello, {{ user.username }}!</h1>
+    <h2>Welcome back to the Bible Project!</h2>
+    {% if user.usergroup %}
+    <p>You are already in the group '{{ user.usergroup.group.name }}'</p>
+    <p><a href="{% url 'leave-group' %}">Leave Group</a></p>
+    <p><a href="{% url 'bible_view' %}">Read the Bible</a></p>
+    {% else %}
+    <a href="{% url 'groups-home' %}">Create/Join a Group</a>
+    {% endif %}
+    {% else %}
+    <h1>Welcome to the Bible Project!</h1>
+    <h2>Login <a href="{% url 'login' %}">here</a></h2>
+    <h4>Don't have an account? <a href="{% url 'register' %}">Register</a></h4>
+    {% endif %}
+  </body>
+</html>

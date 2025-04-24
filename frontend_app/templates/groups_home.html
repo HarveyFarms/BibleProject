@@ -1,0 +1,11 @@
+<h4>Go back to <a href="{% url 'index' %}">Home Page</a></h4>
+<h2>Groups</h2>
+<p><a href="{% url 'create-group' %}">Create a Group</a></p>
+<p><a href="{% url 'join-group-page' %}">Join a Group</a></p>
+{% if messages %}
+  <ul>
+    {% for message in messages %}
+      <li>{{ message }}</li>
+    {% endfor %}
+  </ul>
+{% endif %}

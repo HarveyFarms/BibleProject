@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Verses</title>
+</head>
+<body>
+    <h1>Group Bible Verses</h1>
+
+    <div>
+        {% for verse in verses %}
+            <div class="verse" data-verse-id="{{ verse.id }}" style="margin-bottom: 10px;">
+                <strong>{{ verse.verse }}</strong>: 
+                <span class="verse-text" id="verse-text-{{ verse.id }}">{{ verse.text }}</span>
+
+                <!-- Highlight button -->
+                <button onclick="highlightVerse({{ verse.id }}, 'yellow')">⭐ Highlight</button>
+
+                <!-- Display highlights for the group -->
+                {% for highlight in highlights %}
+                    {% if highlight.verse.id == verse.id %}
+                        <span style="background-color: {{ highlight.color }};">Highlighted</span>
+                    {% endif %}
+                {% endfor %}
+
+                <!-- Comment section -->
+                <div id="comments-{{ verse.id }}" class="comments" style="margin-top: 5px;">
+                    {% for comment in comments %}
+                        {% if comment.verse.id == verse.id %}
+                            <p><strong>{{ comment.user.username }}:</strong> {{ comment.text }}</p>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+
+                <textarea placeholder="Write a comment..." id="comment-{{ verse.id }}"></textarea>
+                <button onclick="submitComment({{ verse.id }})">Post Comment</button>
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function highlightVerse(verseId, color) {
+            fetch("{% url 'add_highlight' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: `verse_id=${verseId}&color=${color}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                const verseElem = document.getElementById(`verse-text-${verseId}`);
+                verseElem.style.backgroundColor = color;  // Apply color to verse text
+            });
+        }
+
+        function submitComment(verseId) {
+            const text = document.getElementById(`comment-${verseId}`).value;
+
+            fetch("{% url 'post_comment' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: `verse_id=${verseId}&text=${encodeURIComponent(text)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.username && data.text) {
+                    const commentBox = document.getElementById(`comments-${verseId}`);
+                    const newComment = document.createElement("p");
+                    newComment.textContent = `${data.username}: ${data.text}`;
+                    commentBox.appendChild(newComment);  // Append comment to the comment section
+                }
+                document.getElementById(`comment-${verseId}`).value = "";  // Clear the textarea
+            });
+        }
+    </script>
+</body>
+</html>

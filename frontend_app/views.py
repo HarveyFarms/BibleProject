@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponse
 from .models import BibleVerse
+import json
 import re
 
 from .models import Comment, Highlight
@@ -131,9 +132,10 @@ def add_highlight(request):
 def save_highlight(request):
     if request.method == "POST":
         data = json.loads(request.body)
+        user_group = UserGroup.objects.get(user=request.user)
         Highlight.objects.create(
             user=request.user,
-            group=request.user.group,  # Assuming you store this
+            group=user_group.group,
             book=data["book"],
             chapter=data["chapter"],
             verse=data["verse"],
@@ -241,7 +243,7 @@ def groups_home(request):
 
 @login_required
 def create_group(request):
-    if request.user.groups.exists():  # Check if the user is already in a group
+    if UserGroup.objects.filter(user=request.user).exists():  # Check if the user is already in a group
         messages.warning(request, "You're already in a group!")
         return redirect('groups-home')
     
@@ -262,7 +264,7 @@ def join_group_page(request):
 
 @login_required
 def join_group(request, group_id):
-    if request.user.groups.exists():  # Check if the user is already in a group
+    if UserGroup.objects.filter(user=request.user).exists():  # Check if the user is already in a group
         return redirect('already_in_group')  # Redirect if already in a group
     
     group = Group.objects.get(id=group_id)
